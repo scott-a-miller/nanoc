@@ -80,13 +80,24 @@ module Nanoc::DataSources
         meta_filename    = filename_for(base_filename, meta_ext)
         content_filename = filename_for(base_filename, content_ext)
 
+        meta = {}
+        content_or_filename = content_filename
+        exception = nil
+
         # Read content and metadata
-        is_binary = !!(content_filename && !@site.config[:text_extensions].include?(File.extname(content_filename)[1..-1]))
-        if is_binary && klass == Nanoc::Item
-          meta                = (meta_filename && YAML.load_file(meta_filename)) || {}
-          content_or_filename = content_filename
-        else
-          meta, content_or_filename = parse(content_filename, meta_filename, kind)
+        begin
+          is_binary = !!(content_filename && !@site.config[:text_extensions].include?(File.extname(content_filename)[1..-1]))
+          if is_binary && klass == Nanoc::Item
+            begin
+              meta                = (meta_filename && YAML.load_file(meta_filename)) || {}
+            rescue Exception => e              
+              raise Nanoc::Errors::MetaDataException.new(meta_filename, e)
+            end
+          else
+            meta, content_or_filename = parse(content_filename, meta_filename, kind)
+          end
+        rescue Exception => e
+          exception = e
         end
 
         # Get attributes
@@ -126,7 +137,7 @@ module Nanoc::DataSources
         # Create layout object
         klass.new(
           content_or_filename, attributes, identifier,
-          :binary => is_binary, :mtime => mtime
+          :binary => is_binary, :mtime => mtime, :exception=>exception
         )
       end
     end
@@ -229,7 +240,11 @@ module Nanoc::DataSources
       # Read content and metadata from separate files
       if meta_filename
         content = content_filename ? read(content_filename) : ''
-        meta    = YAML.load(read(meta_filename)) || {}
+        begin
+          meta    = YAML.load(read(meta_filename)) || {}
+        rescue Exception => e              
+          raise Nanoc::Errors::MetaDataException.new(meta_filename, e)
+        end
 
         return [ meta, content ]
       end
@@ -251,7 +266,11 @@ module Nanoc::DataSources
       end
 
       # Parse
-      meta    = YAML.load(pieces[2]) || {}
+      begin
+        meta    = YAML.load(pieces[2]) || {}
+      rescue Exception => e
+        raise Nanoc::Errors::MetaDataException.new(content_filename, e)
+      end
       content = pieces[4..-1].join.strip
 
       # Done

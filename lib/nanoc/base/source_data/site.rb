@@ -172,6 +172,31 @@ module Nanoc
       @config
     end
 
+    # Checks each of the items and layouts, reporting any discovered exceptions.
+    # If there were, a new exception is raised
+    def check_item_and_layout_exceptions
+      exception_count = 0
+      @items.each do |item|
+        if item.exception          
+          puts "Error in item: #{item.identifier}"
+          puts "  " + item.exception.message
+          puts "    " + item.exception.backtrace.join("\n    ")
+          exception_count += 1
+        end
+      end      
+      @layouts.each do |layout|
+        if layout.exception
+          puts "Error in layout: #{layout.identifier}"
+          puts layout.exception.message
+          puts "    " + layout.exception.backtrace.join("\n    ")
+          exception_count += 1
+        end
+      end
+      if exception_count > 0
+        raise "Exceptions found in source items and/or layouts: #{exception_count}"     
+      end
+    end
+
     # Fills each item's parent reference and children array with the
     # appropriate items. It is probably not necessary to call this method
     # manually; it will be called when appropriate.
@@ -246,6 +271,8 @@ module Nanoc
       load_items
       load_layouts
       data_sources.each { |ds| ds.unuse }
+      
+      check_item_and_layout_exceptions
       setup_child_parent_links
 
       # Load compiler too

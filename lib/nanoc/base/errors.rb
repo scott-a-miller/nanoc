@@ -197,6 +197,23 @@ module Nanoc
 
     end
 
+    # Error that is raised for a YAML parse exception
+    class MetaDataException < Generic
+      attr_accessor :cause
+      attr_accessor :meta_filename
+
+      # @param [Exception] cause the Exception that was thrown during parsing
+      def initialize(meta_filename, cause)
+        super("Error in YAML file #{meta_filename}: #{cause.message.gsub("\r", '')}")
+        @meta_filename = meta_filename
+        @cause = cause
+      end
+
+      def backtrace
+        @cause.nil? ? super : @cause.backtrace
+      end
+    end
+
     # @deprecated No longer necessary, but kept for backwards compatibility.
     class DataNotYetAvailable < Generic
 

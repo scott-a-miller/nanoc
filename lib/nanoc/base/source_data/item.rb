@@ -43,6 +43,9 @@ module Nanoc
     # @return [Array<Nanoc::Item>] The child items of this item
     attr_accessor :children
 
+    # @return [Exception] an exception that occurred while creating this item
+    attr_accessor :exception
+
     # Creates a new item with the given content or filename, attributes and
     # identifier.
     #
@@ -81,6 +84,9 @@ module Nanoc
       else
         @raw_content  = raw_content_or_raw_filename
       end
+      
+      # Get exception if one occurred
+      @exception = params[:exception]
 
       # Get rest of params
       @attributes   = attributes.symbolize_keys

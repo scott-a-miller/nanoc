@@ -18,6 +18,9 @@ module Nanoc
     #   slash
     attr_accessor :identifier
 
+    # @return [Exception] if an exception occurred during construction
+    attr_accessor :exception
+
     # Creates a new layout.
     #
     # @param [String] raw_content The raw content of this layout.
@@ -37,11 +40,13 @@ module Nanoc
       @raw_content  = raw_content
       @attributes   = attributes.symbolize_keys
       @identifier   = identifier.cleaned_identifier.freeze
-
+      
       # Set mtime
       params ||= {}
       params = { :mtime => params } if params.is_a?(Time)
       @attributes.merge(:mtime => params[:mtime]) if params[:mtime]
+
+      @exception = params[:exception]
     end
 
     # Requests the attribute with the given key.
