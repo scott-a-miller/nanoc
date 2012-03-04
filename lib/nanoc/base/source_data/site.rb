@@ -175,25 +175,28 @@ module Nanoc
     # Checks each of the items and layouts, reporting any discovered exceptions.
     # If there were, a new exception is raised
     def check_item_and_layout_exceptions
-      exception_count = 0
-      @items.each do |item|
-        if item.exception          
-          puts "Error in item: #{item.identifier}"
-          puts "  " + item.exception.message
-          puts "    " + item.exception.backtrace.join("\n    ")
-          exception_count += 1
+      if !@already_raised_exception
+        exception_count = 0
+        @items.each do |item|
+          if item.exception          
+            puts "Error in item: #{item.identifier}"
+            puts "  " + item.exception.message
+            puts "    " + item.exception.backtrace.join("\n    ")
+            exception_count += 1
+          end
+        end      
+        @layouts.each do |layout|
+          if layout.exception
+            puts "Error in layout: #{layout.identifier}"
+            puts layout.exception.message
+            puts "    " + layout.exception.backtrace.join("\n    ")
+            exception_count += 1
+          end
         end
-      end      
-      @layouts.each do |layout|
-        if layout.exception
-          puts "Error in layout: #{layout.identifier}"
-          puts layout.exception.message
-          puts "    " + layout.exception.backtrace.join("\n    ")
-          exception_count += 1
+        if exception_count > 0
+          @already_raised_exception = true
+          raise "Exceptions found in source items and/or layouts: #{exception_count}"     
         end
-      end
-      if exception_count > 0
-        raise "Exceptions found in source items and/or layouts: #{exception_count}"     
       end
     end
 
