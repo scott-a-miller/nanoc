@@ -406,7 +406,12 @@ module Nanoc
         Nanoc::NotificationCenter.post(:filtering_started,  self, filter_name)
 
         # Layout
-        @content[:last] = filter.run(layout.raw_content, filter_args)
+        begin
+          @content[:last] = filter.run(layout.raw_content, filter_args)
+        rescue
+          puts "Error laying out item: #{item.identifier}"
+          raise
+        end
 
         # Create "post" snapshot
         snapshot(:post, :final => false)
